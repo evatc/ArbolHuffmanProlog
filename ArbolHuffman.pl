@@ -68,13 +68,25 @@ texto_a_bits_lista([A|ListaChars],Union) :-
 
 
 %Traducción de string de códigos a string de carácteres
-%
-%
-%
-%
-%
-%
-%
+bits_a_texto(BitsString, Texto) :-
+ string_chars(BitsString, ListaBitsChars),
+ maplist(atom_number, ListaBitsChars, Bits),
+ bits_a_texto_lista(Bits, ListaChars),
+ string_chars(Texto, ListaChars).
+
+bits_a_texto_lista([], []).  % Caso base: si no hay bits, no hay caracteres.
+bits_a_texto_lista(Bits, [Char|Chars]) :-
+    mi_arbol(Arbol),               
+    recorrer_arbol(Bits, Arbol, Char, RestBits), 
+    bits_a_texto_lista(RestBits, Chars).  
+
+% Recorre el árbol de Huffman usando los bits para encontrar un carácter.
+recorrer_arbol(Bits, hoja(C, _), C, Bits). 
+recorrer_arbol([0|Bits], rama(I, _), Char, RestBits) :-
+    recorrer_arbol(Bits, I, Char, RestBits).
+recorrer_arbol([1|Bits], rama(_, D), Char, RestBits) :-
+    recorrer_arbol(Bits, D, Char, RestBits). 
+
 
 %Construcción del árbol de Huffman
 
@@ -121,3 +133,53 @@ construir_arbol([Nodo1,Nodo2|ListaNodos],Arbol):-
     construir_arbol(NuevaLista,Arbol).
 
 crear_rama(Nodo1,Nodo2,rama(Nodo1,Nodo2)).
+
+% Declaramos tabla_codigo como dinámico para poder agregar y eliminar hechos.
+:- dynamic tabla_codigo/2.
+
+% Generar la tabla de códigos a partir del árbol de Huffman.
+generar_tabla_codigos :-
+    retractall(tabla_codigo(_, _)),  
+    mi_arbol(Arbol),                 
+    recorrer_arbol_generar_tabla(Arbol, []). 
+
+% Recorre el árbol y genera el código para cada hoja.
+recorrer_arbol_generar_tabla(hoja(C, _), Codigo) :-
+    asserta(tabla_codigo(C, Codigo)), 
+    fail.                            
+recorrer_arbol_generar_tabla(rama(Izq, Der), Codigo) :-
+    append(Codigo, [0], CodigoIzq),   
+    recorrer_arbol_generar_tabla(Izq, CodigoIzq),
+    append(Codigo, [1], CodigoDer),   
+    recorrer_arbol_generar_tabla(Der, CodigoDer).
+recorrer_arbol_generar_tabla(_, _).   
+
+% Convierte un texto en una lista de bits usando la tabla de códigos.
+texto_a_bits2(Texto, StringBits) :-
+    atom_chars(Texto, ListaChars),    
+    maplist(codigo_de_caracter, ListaChars, ListaBits), 
+    flatten(ListaBits, BitsFlatten), 
+    atomic_list_concat(BitsFlatten, '', AtomicBits), 
+    atom_string(AtomicBits, StringBits). 
+
+% Obtiene el código de un carácter usando la tabla.
+codigo_de_caracter(Char, Codigo) :-
+    tabla_codigo(Char, Codigo).
+
+% Convierte una lista de bits en un texto usando la tabla de códigos.
+bits_a_texto2(BitsString, Texto) :-
+    string_chars(BitsString, ListaBitsChars), 
+    maplist(atom_number, ListaBitsChars, Bits), 
+    bits_a_lista_chars(Bits, ListaChars),       
+    string_chars(Texto, ListaChars).           
+
+% Traduce bits en caracteres según la tabla.
+bits_a_lista_chars([], []).  % Caso base: sin bits, sin caracteres.
+bits_a_lista_chars(Bits, [Char|Chars]) :-
+    extraer_codigo(Bits, Char, RestBits),  
+    bits_a_lista_chars(RestBits, Chars).  
+
+% Extrae el primer carácter correspondiente de los bits.
+extraer_codigo(Bits, Char, RestBits) :-
+    tabla_codigo(Char, Codigo),           
+    append(Codigo, RestBits, Bits).       
