@@ -63,8 +63,8 @@ texto_a_bits(Texto, StringBits) :-
 texto_a_bits_lista([],[]).
 texto_a_bits_lista([A|ListaChars],Union) :-
     char_codigohuff(Codigo,A),
-    append(Codigo,Bits,Union),
-    texto_a_bits_lista(ListaChars,Bits).
+    texto_a_bits_lista(ListaChars,Bits),
+    append(Codigo,Bits,Union).
 
 
 %Traducción de string de códigos a string de carácteres
@@ -124,9 +124,10 @@ frecuencia_caracter(Char,[],[hoja(Char,1)]).
 frecuencia_caracter(Char,[hoja(Char,Frec)|ListaChars],[hoja(Char,NuevaFrec)|ListaChars]):-
     NuevaFrec is Frec+1.
 frecuencia_caracter(Char,[Char2|ListaChars],[Char2|NuevaLista]):-
+    Char2 \= hoja(Char,_),
     frecuencia_caracter(Char,ListaChars,NuevaLista).
 
-construir_arbol([Nodo],Arbol).
+construir_arbol([Nodo],Nodo).
 construir_arbol([Nodo1,Nodo2|ListaNodos],Arbol):-
     crear_rama(Nodo1,Nodo2,R),
     insertar_nodo(R,ListaNodos,NuevaLista),
@@ -181,5 +182,6 @@ bits_a_lista_chars(Bits, [Char|Chars]) :-
 
 % Extrae el primer carácter correspondiente de los bits.
 extraer_codigo(Bits, Char, RestBits) :-
-    tabla_codigo(Char, Codigo),           
-    append(Codigo, RestBits, Bits).       
+    tabla_codigo(Char, Codigo),  
+    append(Codigo, RestBits, Bits).  
+    append(Codigo, RestBits, Bits).  
