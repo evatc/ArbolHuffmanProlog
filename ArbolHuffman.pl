@@ -183,5 +183,4 @@ bits_a_lista_chars(Bits, [Char|Chars]) :-
 % Extrae el primer carácter correspondiente de los bits.
 extraer_codigo(Bits, Char, RestBits) :-
     tabla_codigo(Char, Codigo),  
-    append(Codigo, RestBits, Bits).  
-    append(Codigo, RestBits, Bits).  
+    append(Codigo, RestBits, Bits).   
